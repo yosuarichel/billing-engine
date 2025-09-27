@@ -1,6 +1,32 @@
 version: "3.9"
 
 services:
+  billing_engine.postgres:
+    image: postgres:17
+    container_name: billing_engine.postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123123
+      POSTGRES_DB: postgres
+    volumes:
+      - billing_engine_postgres_pgdata:/var/lib/postgresql/data
+    networks:
+      - db_net
+    ports:
+      - "5432:5432"
+
+  billing_engine.redis:
+    image: redis:7.4
+    container_name: billing_engine.redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - billing_engine_redis_data:/data
+    networks:
+      - redis_net
+
   billing_engine.rpc:
     build:
       context: .
@@ -41,32 +67,6 @@ services:
     networks:
       - backend_net
       - db_net
-      - redis_net
-
-  billing_engine.postgres:
-    image: postgres:17
-    container_name: billing_engine.postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123123
-      POSTGRES_DB: postgres
-    volumes:
-      - billing_engine_postgres_pgdata:/var/lib/postgresql/data
-    networks:
-      - db_net
-    ports:
-      - "5432:5432"
-
-  billing_engine.redis:
-    image: redis:7.4
-    container_name: billing_engine.redis
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "6379:6379"
-    volumes:
-      - billing_engine_redis_data:/data
-    networks:
       - redis_net
 
 volumes:
