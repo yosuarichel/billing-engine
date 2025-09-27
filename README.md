@@ -287,7 +287,6 @@ kitexcall --idl-path ./conf/.idl/billing_engine/billing_engine_service.thrift --
 
 * **Kitex GOPATH issue**: use `-module` flag or ensure `go.mod` exists.
 * **DB errors**: ensure migrations applied.
-* **NSQ EOF errors**: check nsqd address and config.
 
 ---
 
