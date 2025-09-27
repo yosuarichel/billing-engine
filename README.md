@@ -75,7 +75,7 @@ make kitexgen
 ```
 
 ### 3. Run Migrations
-Currently we do it mannualy by executing the sql directly in pgsql
+Currently we do it manually by executing the sql directly in pgsql
 
 **Customer Table**
 ```sql
