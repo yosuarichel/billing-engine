@@ -23,7 +23,6 @@ The system tracks repayments, calculates outstanding balances, and determines de
 * **Delinquency Tracking**: Borrowers who miss 2 consecutive repayments are flagged delinquent.
 * **RPC API** (via Kitex) and **HTTP API** (with Postman collection included).
 * **Database Persistence** with PostgreSQL.
-* **Message Queue Integration** with NSQ.
 
 ---
 
