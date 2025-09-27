@@ -55,7 +55,6 @@ The system tracks repayments, calculates outstanding balances, and determines de
   ```
 * **Docker** or **Podman**
 * **PostgreSQL**
-* **NSQ** (optional)
 
 ---
 
