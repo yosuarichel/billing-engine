@@ -1,0 +1,40 @@
+{
+	"info": {
+		"_postman_id": "ef8114cd-4c26-47ef-a67f-146d322701fd",
+		"name": "Billing Engine",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42917451"
+	},
+	"item": [
+		{
+			"name": "Is Delinquent",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"loan_id\": \"39053054401607707\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:60002/api/v1/billing/is_delinquent",
+					"host": [
+						"localhost"
+					],
+					"port": "60002",
+					"path": [
+						"api",
+						"v1",
+						"billing",
+						"is_delinquent"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

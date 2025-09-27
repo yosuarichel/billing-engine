@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  billing_engine.rpc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: billing_engine.rpc
+    environment:
+      APP_NAME: billing_engine
+      APP_ENV: boe
+      APP_TYPE: rpc
+    ports:
+      - "60001:8888"
+    # depends_on:
+    #   - redis
+    #   - db
+    networks:
+      - backend_net
+      - db_net
+      - redis_net
+    
+  billing_engine.http:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: billing_engine.http
+    environment:
+      APP_NAME: billing_engine
+      APP_ENV: boe
+      APP_TYPE: http
+    ports:
+      - "60002:8080"
+    # depends_on:
+    #   - redis
+    #   - db
+    networks:
+      - backend_net
+      - db_net
+      - redis_net
+
+networks:
+  backend_net:
+    external: true
+  db_net:
+    external: true
+  redis_net:
+    external: true
