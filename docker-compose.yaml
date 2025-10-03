@@ -13,6 +13,7 @@ services:
       - billing_engine_postgres_pgdata:/var/lib/postgresql/data
     networks:
       - db_net
+      - monitoring_net
     ports:
       - "5432:5432"
 
@@ -26,6 +27,7 @@ services:
       - billing_engine_redis_data:/data
     networks:
       - redis_net
+      - monitoring_net
 
   billing_engine.rpc:
     build:
@@ -47,7 +49,8 @@ services:
       - backend_net
       - db_net
       - redis_net
-    
+      - monitoring_net
+
   billing_engine.http:
     build:
       context: .
@@ -68,6 +71,7 @@ services:
       - backend_net
       - db_net
       - redis_net
+      - monitoring_net
 
 volumes:
   billing_engine_postgres_pgdata:
@@ -79,4 +83,6 @@ networks:
   db_net:
     external: true
   redis_net:
+    external: true
+  monitoring_net:
     external: true

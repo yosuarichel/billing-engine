@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cloudwego/kitex/pkg/klog"
+	"github.com/kitex-contrib/obs-opentelemetry/provider"
 	"github.com/yosuarichel/billing-engine/pkg/config"
 	"github.com/yosuarichel/billing-engine/pkg/infra/db"
 	"github.com/yosuarichel/billing-engine/pkg/infra/redis"
@@ -11,8 +12,9 @@ import (
 )
 
 type AppDeps struct {
-	Cfg *config.AppConfig
-	Ctx context.Context
+	Cfg          *config.AppConfig
+	Ctx          context.Context
+	OTelProvider provider.OtelProvider
 }
 
 func Init() *AppDeps {

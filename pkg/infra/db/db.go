@@ -10,6 +10,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 var (
@@ -65,6 +67,10 @@ func MustInitDB(ctx context.Context) {
 	}
 
 	db = init(&cfg.DB)
+
+	if err := db.Use(tracing.NewPlugin()); err != nil {
+		panic(err)
+	}
 }
 
 func GetDB() *gorm.DB {
