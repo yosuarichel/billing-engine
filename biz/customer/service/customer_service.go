@@ -35,23 +35,3 @@ func (s *CustomerService) GetCustomerDetail(ctx context.Context, customerID *int
 
 	return s.CustomerRepository.FindOne(ctx, customerID)
 }
-
-// func (s *CustomerService) GetCustomerList(ctx context.Context, param *domain.GetCustomerListParam) (customers []*domain.Customer, err error) {
-// 	if param == nil {
-// 		return
-// 	}
-
-// 	customerList, err := s.CustomerRepository.FindAllCustomers(ctx, &domain.FindAllCustomerFilterParam{
-// 		CustomerIDs: param.CustomerIDs,
-// 		Name:       param.Name,
-// 	})
-// 	if err != nil {
-// 		klog.CtxErrorf(ctx, "[Customer][Service][GetCustomerList] Error call FindAllCustomers repo", map[string]interface{}{
-// 			"error": err,
-// 			"param": param,
-// 		})
-// 		return
-// 	}
-
-// 	return customerList, nil
-// }

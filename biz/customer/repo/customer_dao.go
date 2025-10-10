@@ -62,32 +62,3 @@ func (r *CustomerRepository) FindOne(ctx context.Context, customerID *int64) (cu
 	}
 	return customer, nil
 }
-
-// func (r *ProductRepository) FindAllProducts(ctx context.Context, param *domain.FindAllProductFilterParam) (products []*domain.Product, err error) {
-// 	if param == nil {
-// 		return
-// 	}
-
-// 	db := r.db.WithContext(ctx).Table((&domain.Product{}).TableName())
-// 	db.Where("deleted_at IS NULL")
-
-// 	if len(param.ProductIDs) > 0 {
-// 		db.Where("id IN ?", param.ProductIDs)
-// 	}
-// 	if param.Name != nil {
-// 		db.Where("name LIKE ?", "%"+*param.Name+"%")
-// 	}
-// 	if param.Description != nil {
-// 		db.Where("description LIKE ?", "%"+*param.Description+"%")
-// 	}
-
-// 	err = db.Find(&products).Error
-// 	if err != nil {
-// 		klog.CtxErrorf(ctx, "[Product][Repo][FindAllProducts] Error finding products from db", map[string]interface{}{
-// 			"error": err,
-// 			"param": param,
-// 		})
-// 		return
-// 	}
-// 	return products, nil
-// }
