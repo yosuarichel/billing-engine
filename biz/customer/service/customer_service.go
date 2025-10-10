@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/bytedance/gg/gptr"
+	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/yosuarichel/billing-engine/biz/customer/domain"
 	customerRepo "github.com/yosuarichel/billing-engine/biz/customer/repo"
 )
@@ -22,7 +22,7 @@ func NewCustomerService(customerRepo *customerRepo.CustomerRepository) *Customer
 
 func (s *CustomerService) CreateCustomer(ctx context.Context, input *domain.Customer) (id int64, err error) {
 	if input.Name == "" {
-		return 0, fmt.Errorf("input name is required")
+		return 0, kerrors.ErrPayloadValidation.WithCause(errors.New("input name is required"))
 	}
 
 	return s.CustomerRepository.SaveCustomer(ctx, input)

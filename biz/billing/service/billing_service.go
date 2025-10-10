@@ -33,8 +33,6 @@ func (s *BillingService) GetOutstanding(ctx context.Context, loanID *int64) (dat
 		return nil, errors.New("missing parameter loanID")
 	}
 
-	klog.Info("MASUUUUKKKK SINIIII 1")
-
 	loanData, err := s.LoanService.GetLoanDetail(ctx, &loanDomain.FindOneLoanParam{
 		LoanID: gptr.Indirect(loanID),
 		Status: loanDomain.LoanStatus_Ongoing,

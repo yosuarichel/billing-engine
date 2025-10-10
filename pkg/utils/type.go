@@ -2,6 +2,7 @@ package utils
 
 // Env keys
 const (
+	APP_NAME = "APP_NAME"
 	APP_ENV  = "APP_ENV"
 	APP_TYPE = "APP_TYPE"
 )

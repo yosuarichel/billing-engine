@@ -28,6 +28,8 @@ func NewHttpHandler(
 }
 
 func (h *HttpHandler) CreateCustomer(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler CreateCustomer]")
+
 	var req billing_engine.CreateCustomerRequest
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, map[string]string{
@@ -36,14 +38,14 @@ func (h *HttpHandler) CreateCustomer(c context.Context, ctx *app.RequestContext)
 		return
 	}
 
-	klog.CtxInfof(c, "[HTTP Handler GetTestData]")
-
 	res := h.CustomerApp.CreateCustomer(c, &req)
 
 	ctx.JSON(http.StatusOK, &res)
 }
 
 func (h *HttpHandler) IsDelinquent(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler IsDelinquent]")
+
 	var req billing_engine.IsDelinquentRequest
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, map[string]string{
@@ -52,14 +54,14 @@ func (h *HttpHandler) IsDelinquent(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	klog.CtxInfof(c, "[HTTP Handler GetTestData]")
-
 	res := h.BillingApp.IsDelinquent(c, &req)
 
 	ctx.JSON(http.StatusOK, &res)
 }
 
 func (h *HttpHandler) CreateLoan(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler CreateLoan]")
+
 	var req billing_engine.CreateLoanRequest
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, map[string]string{
@@ -68,14 +70,14 @@ func (h *HttpHandler) CreateLoan(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	klog.CtxInfof(c, "[HTTP Handler GetTestData]")
-
 	res := h.BillingApp.CreateLoan(c, &req)
 
 	ctx.JSON(http.StatusOK, &res)
 }
 
 func (h *HttpHandler) GetOutstanding(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler GetOutstanding]")
+
 	var req billing_engine.GetOutstandingRequest
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, map[string]string{
@@ -84,14 +86,14 @@ func (h *HttpHandler) GetOutstanding(c context.Context, ctx *app.RequestContext)
 		return
 	}
 
-	klog.CtxInfof(c, "[HTTP Handler GetTestData]")
-
 	res := h.BillingApp.GetOutstanding(c, &req)
 
 	ctx.JSON(http.StatusOK, &res)
 }
 
 func (h *HttpHandler) MakePayment(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler MakePayment]")
+
 	var req billing_engine.MakePaymentRequest
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, map[string]string{
@@ -99,8 +101,6 @@ func (h *HttpHandler) MakePayment(c context.Context, ctx *app.RequestContext) {
 		})
 		return
 	}
-
-	klog.CtxInfof(c, "[HTTP Handler GetTestData]")
 
 	res := h.BillingApp.MakePayment(c, &req)
 

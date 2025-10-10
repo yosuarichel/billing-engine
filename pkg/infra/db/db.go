@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/yosuarichel/billing-engine/pkg/config"
@@ -57,6 +58,11 @@ func MustInitDB(ctx context.Context) {
 		if err != nil {
 			panic(err)
 		}
+
+		sqlDB.SetMaxOpenConns(cfg.DB.MaxOpenConns)
+		sqlDB.SetMaxIdleConns(cfg.DB.MaxIdleConns)
+		sqlDB.SetConnMaxLifetime(time.Duration(cfg.DB.MaxConnLifetime) * time.Minute)
+		sqlDB.SetConnMaxIdleTime(time.Duration(cfg.DB.MaxConnIdleTime) * time.Minute)
 
 		if err := sqlDB.Ping(); err != nil {
 			panic(err)

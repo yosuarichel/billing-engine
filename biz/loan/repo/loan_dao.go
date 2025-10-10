@@ -54,25 +54,18 @@ func (r *LoanRepository) FindOne(ctx context.Context, param *domain.FindOneLoanP
 		return
 	}
 
-	klog.Info("MASUUUUKKKK SINIIII star get loan data")
-
 	db := r.db.WithContext(ctx).Table(loan.TableName())
 	db.Where("deleted_at IS NULL")
 
 	if param.CustomerID > 0 {
-		klog.Info("MASUUUUKKKK SINIIII customer")
 		db.Where("customer_id = ?", param.CustomerID)
 	}
 	if param.LoanID > 0 {
-		klog.Info("MASUUUUKKKK SINIIII loan")
 		db.Where("id = ?", param.LoanID)
 	}
 	if param.Status != "" {
-		klog.Info("MASUUUUKKKK SINIIII status")
 		db.Where("status = ?", param.Status)
 	}
-
-	klog.Info("MASUUUUKKKK SINIIII get loan data")
 
 	err = db.First(&loan).Error
 	if err != nil {
@@ -86,7 +79,6 @@ func (r *LoanRepository) FindOne(ctx context.Context, param *domain.FindOneLoanP
 		return
 	}
 
-	klog.Info("MASUUUUKKKK SINIIII berhasil loan data")
 	return loan, nil
 }
 

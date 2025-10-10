@@ -29,7 +29,6 @@ func (r *LoanScheduleRepository) SaveLoanSchedules(ctx context.Context, schedule
 	now := time.Now()
 	ids = make([]int64, len(schedules))
 
-	klog.Infof("SCHEDULE DATA ==> %+v", len(schedules))
 	for i, sched := range schedules {
 		if sched.ID == 0 {
 			sched.ID = utils.GenerateSonyflakeID()

@@ -48,8 +48,3 @@ func (h *RpcHandler) MakePayment(ctx context.Context, req *billing_engine.MakePa
 	klog.CtxInfof(ctx, "[RPC Handler MakePayment]")
 	return h.BillingApp.MakePayment(ctx, req), nil
 }
-
-// func (h *RpcHandler) GetProductList(ctx context.Context, req *billing_engine.GetProductListRequest) (res *billing_engine.GetProductListResponse, err error) {
-// 	klog.CtxInfof(ctx, "[RPC Handler GetProductList]")
-// 	return h.CustomerApp.GetProductList(ctx, req), nil
-// }

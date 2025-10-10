@@ -13,13 +13,14 @@ import (
 	"github.com/hertz-contrib/obs-opentelemetry/tracing"
 	httpHandler "github.com/yosuarichel/billing-engine/handler/http"
 	"github.com/yosuarichel/billing-engine/pkg/config"
+	"github.com/yosuarichel/billing-engine/pkg/utils"
 )
 
 func StartHTTP(ctx context.Context, cfg *config.AppConfig, handler *httpHandler.HttpHandler) {
 	klog.Infof("Starting HTTP Server on :%d ...", cfg.HTTPPort)
 
 	p := provider.NewOpenTelemetryProvider(
-		provider.WithServiceName(cfg.AppName),
+		provider.WithServiceName(utils.GetAppName()),
 		provider.WithExportEndpoint("otel-collector:4317"),
 		provider.WithInsecure(),
 		provider.WithResourceAttribute(attribute.String("env", cfg.Env)),

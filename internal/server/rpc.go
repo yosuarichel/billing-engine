@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/cloudwego/kitex/pkg/logid"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	kitexServer "github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/obs-opentelemetry/provider"
@@ -16,13 +15,13 @@ import (
 	rpcHandler "github.com/yosuarichel/billing-engine/handler/rpc"
 	"github.com/yosuarichel/billing-engine/kitex_gen/billing_engine/billingengineservice"
 	"github.com/yosuarichel/billing-engine/pkg/config"
+	"github.com/yosuarichel/billing-engine/pkg/utils"
 )
 
 func StartRPC(ctx context.Context, cfg *config.AppConfig, handler *rpcHandler.RpcHandler) {
 	klog.Infof("Starting RPC Server on :%d ...", cfg.RPCPort)
-	logid.DefaultLogIDGenerator(ctx)
 	p := provider.NewOpenTelemetryProvider(
-		provider.WithServiceName(cfg.AppName),
+		provider.WithServiceName(utils.GetAppName()),
 		provider.WithExportEndpoint("otel-collector:4317"),
 		provider.WithInsecure(),
 		provider.WithResourceAttribute(attribute.String("env", cfg.Env)),
@@ -39,7 +38,7 @@ func StartRPC(ctx context.Context, cfg *config.AppConfig, handler *rpcHandler.Rp
 		kitexServer.WithSuite(tracing.NewServerSuite()),
 		kitexServer.WithServerBasicInfo(
 			&rpcinfo.EndpointBasicInfo{
-				ServiceName: cfg.AppName,
+				ServiceName: utils.GetAppName(),
 				Tags: map[string]string{
 					"env": cfg.Env,
 				},

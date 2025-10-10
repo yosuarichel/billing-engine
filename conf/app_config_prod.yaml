@@ -9,11 +9,14 @@ db:
   port: 5432
   user: postgres
   password: 123123
-  db_name: postgres
+  db_name: billing_engine
+  max_open_conns: 100
+  max_idle_conns: 50
+  max_conn_lifetime: 120
+  max_conn_idle_time: 30
 
 redis:
   host: billing_engine.redis
   port: 6379
   password: ""
   db: 0
-

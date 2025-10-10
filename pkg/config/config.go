@@ -34,20 +34,21 @@ type AppConfig struct {
 }
 
 type DBConfig struct {
-	Driver       string        `yaml:"driver"`
-	PSM          string        `yaml:"psm"`
-	Host         string        `yaml:"host"`
-	Port         int           `yaml:"port"`
-	User         string        `yaml:"user"`
-	Password     string        `yaml:"password"`
-	DBName       string        `yaml:"db_name"`
-	MaxIdleConns int           `yaml:"max_idle_conns"`
-	MaxOpenConns int           `yaml:"max_open_conns"`
-	Timeout      time.Duration `yaml:"timeout"`
-	ReadTimeout  time.Duration `yaml:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout"`
-	DBCharset    string        `yaml:"db_charset"`
-	SSLMode      string        `yaml:"sslmode"`
+	Driver          string        `yaml:"driver"`
+	PSM             string        `yaml:"psm"`
+	Host            string        `yaml:"host"`
+	Port            int           `yaml:"port"`
+	User            string        `yaml:"user"`
+	Password        string        `yaml:"password"`
+	DBName          string        `yaml:"db_name"`
+	MaxIdleConns    int           `yaml:"max_idle_conns"`
+	MaxOpenConns    int           `yaml:"max_open_conns"`
+	MaxConnLifetime int           `yaml:"max_conn_lifetime"`
+	MaxConnIdleTime int           `yaml:"max_conn_idle_time"`
+	ReadTimeout     time.Duration `yaml:"read_timeout"`
+	WriteTimeout    time.Duration `yaml:"write_timeout"`
+	DBCharset       string        `yaml:"db_charset"`
+	SSLMode         string        `yaml:"sslmode"`
 }
 
 type RedisConfig struct {

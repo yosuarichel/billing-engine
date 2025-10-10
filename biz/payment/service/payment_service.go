@@ -25,8 +25,6 @@ func (s *PaymentService) GetSumAmount(ctx context.Context, loanID *int64) (sumAm
 		return nil, errors.New("missing loanID")
 	}
 
-	klog.Info("MASUUUUKKKK SINIIII 2")
-
 	paymentData, err := s.PaymentRepository.FindAll(ctx, &domain.FindAllParam{
 		LoanID: gptr.Indirect(loanID),
 	})

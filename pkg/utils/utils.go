@@ -24,6 +24,10 @@ func GetAppType() string {
 	return GetEnvWithKey(APP_TYPE, "")
 }
 
+func GetAppName() string {
+	return GetEnvWithKey(APP_NAME, "")
+}
+
 func GetMachineID() (int, error) {
 	hostname, err := os.Hostname()
 	klog.Info("HOSTNAME ====> ", hostname)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/yosuarichel/billing-engine/biz/loan/domain"
 	loanRepo "github.com/yosuarichel/billing-engine/biz/loan/repo"
 	"github.com/yosuarichel/billing-engine/pkg/utils"
@@ -34,8 +33,6 @@ func (s *LoanService) GetLoanDetail(ctx context.Context, param *domain.FindOneLo
 	if param == nil {
 		return
 	}
-
-	klog.Info("MASUUUUKKKK SINIIII Loan detail")
 
 	return s.LoanRepository.FindOne(ctx, param)
 }

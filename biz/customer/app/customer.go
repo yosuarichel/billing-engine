@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/bytedance/gg/gconv"
@@ -18,7 +19,7 @@ func (a *CustomerApp) CreateCustomer(ctx context.Context, req *billing_engine.Cr
 		return &billing_engine.CreateCustomerResponse{
 			BaseResp: &base.BaseResp{
 				StatusMessage: errors.New("invalid request").Error(),
-				StatusCode:    http.StatusInternalServerError,
+				StatusCode:    http.StatusBadRequest,
 			},
 		}
 	}
@@ -30,12 +31,13 @@ func (a *CustomerApp) CreateCustomer(ctx context.Context, req *billing_engine.Cr
 	if err != nil {
 		klog.CtxErrorf(ctx, "[Customer][App][CreateCustomer] Error call CreateCustomer service", map[string]interface{}{
 			"error":  err.Error(),
-			"params": req,
+			"params": fmt.Sprintf("%+v", req),
 		})
+
 		return &billing_engine.CreateCustomerResponse{
 			BaseResp: &base.BaseResp{
 				StatusMessage: err.Error(),
-				StatusCode:    http.StatusInternalServerError,
+				StatusCode:    http.StatusBadRequest,
 			},
 		}
 	}

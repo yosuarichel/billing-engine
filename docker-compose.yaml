@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123123
-      POSTGRES_DB: postgres
+      POSTGRES_DB: billing_engine
     volumes:
       - billing_engine_postgres_pgdata:/var/lib/postgresql/data
     networks:
@@ -37,7 +37,7 @@ services:
       #   GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: billing_engine.rpc
     environment:
-      APP_NAME: billing_engine
+      APP_NAME: billing_engine_rpc
       APP_ENV: boe
       APP_TYPE: rpc
     ports:
@@ -59,7 +59,7 @@ services:
       #   GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: billing_engine.http
     environment:
-      APP_NAME: billing_engine
+      APP_NAME: billing_engine_http
       APP_ENV: boe
       APP_TYPE: http
     ports:
