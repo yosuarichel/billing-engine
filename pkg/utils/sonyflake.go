@@ -13,7 +13,6 @@ var (
 	once sync.Once
 )
 
-// initSonyflake untuk cluster, gunakan fungsi machineID custom
 func initSonyflake() {
 	settings := sonyflake.Settings{
 		StartTime: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -30,14 +29,12 @@ func initSonyflake() {
 	sf = res
 }
 
-// InitSonyflakeCluster bisa dipanggil sekali di awal app
 func InitSonyflakeCluster() {
 	once.Do(func() {
 		initSonyflake()
 	})
 }
 
-// GenerateSonyflakeID generate ID unik cluster-safe
 func GenerateSonyflakeID() int64 {
 	if sf == nil {
 		panic("sonyflake not initialized yet, call InitSonyflakeCluster first")
