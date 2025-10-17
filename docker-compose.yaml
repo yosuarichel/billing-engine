@@ -45,6 +45,8 @@ services:
     depends_on:
       - billing_engine.postgres
       - billing_engine.redis
+    labels:
+      - "service=billing-engine-rpc"
     networks:
       - backend_net
       - db_net
@@ -67,6 +69,32 @@ services:
     depends_on:
       - billing_engine.postgres
       - billing_engine.redis
+    labels:
+      - "service=billing-engine-http"
+    networks:
+      - backend_net
+      - db_net
+      - redis_net
+      - monitoring_net
+
+  billing_engine.http_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: billing_engine.http_2
+    environment:
+      APP_NAME: billing_engine_http
+      APP_ENV: boe
+      APP_TYPE: http
+    ports:
+      - "60003:8080"
+    depends_on:
+      - billing_engine.postgres
+      - billing_engine.redis
+    labels:
+      - "service=billing-engine-http"
     networks:
       - backend_net
       - db_net
