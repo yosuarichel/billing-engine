@@ -1,11 +1,11 @@
-app_name: billing_engine
+app_name: billing-engine
 env: boe
 rpc_port: 8888
 http_port: 8080
 
 db:
   driver: postgres
-  host: billing_engine.postgres
+  host: billing-engine.postgres
   port: 5432
   user: postgres
   password: 123123
@@ -16,7 +16,7 @@ db:
   max_conn_idle_time: 30
 
 redis:
-  host: billing_engine.redis
+  host: billing-engine.redis
   port: 6379
   password: ""
   db: 0

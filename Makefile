@@ -12,26 +12,26 @@ build:
 	@echo ">> Running build script"
 	@$(BUILD_SCRIPT)
 
-# Start podman compose
+# Start docker-compose
 .PHONY: up
 up:
-	@echo ">> Starting podman compose"
-	podman compose -f ./$(COMPOSE_FILE) up -d --build
+	@echo ">> Starting docker-compose"
+	docker-compose -f ./$(COMPOSE_FILE) up --scale billing-engine.http=3 --scale billing-engine.rpc=3 -d --build
 
-# Stop podman compose
+# Stop docker-compose
 .PHONY: down
 down:
-	@echo ">> Stopping podman compose"
-	podman compose -f $(COMPOSE_FILE) down
+	@echo ">> Stopping docker-compose"
+	docker-compose -f $(COMPOSE_FILE) down
 
-# Restart podman compose
+# Restart docker-compose
 .PHONY: restart
 restart: down up
 
 # Show logs
 .PHONY: logs
 logs:
-	podman compose -f $(COMPOSE_FILE) logs -f
+	docker-compose -f $(COMPOSE_FILE) logs -f
 
 # Clean up all containers & images
 .PHONY: clean
@@ -39,7 +39,7 @@ clean: down
 	@echo ">> Removing dangling images"
 	-podman image prune -f
 
-# Stop podman compose
+# Stop docker-compose
 .PHONY: kitexgen
 kitexgen:
 	@echo ">> Generating a new kitex gen"

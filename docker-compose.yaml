@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  billing_engine.postgres:
+  billing-engine.postgres:
     image: postgres:17
-    container_name: billing_engine.postgres
+    container_name: billing-engine.postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -17,9 +17,9 @@ services:
     ports:
       - "5432:5432"
 
-  billing_engine.redis:
+  billing-engine.redis:
     image: redis:7.4
-    container_name: billing_engine.redis
+    container_name: billing-engine.redis
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
@@ -29,77 +29,60 @@ services:
       - redis_net
       - monitoring_net
 
-  billing_engine.rpc:
+  billing-engine.rpc:
     build:
       context: .
       dockerfile: Dockerfile
-      # args:
-      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
-    container_name: billing_engine.rpc
     environment:
-      APP_NAME: billing_engine_rpc
+      APP_NAME: billing-engine-rpc
       APP_ENV: boe
       APP_TYPE: rpc
-    ports:
-      - "60001:8888"
+    # ports:
+    #   - "60001:8888"
     depends_on:
-      - billing_engine.postgres
-      - billing_engine.redis
+      - billing-engine.postgres
+      - billing-engine.redis
     labels:
       - "service=billing-engine-rpc"
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.billing-engine-rpc.service=billing-engine-rpc"
+      - "traefik.tcp.routers.billing-engine-rpc.tls=true"
+      - "traefik.tcp.routers.billing-engine-rpc.rule=HostSNI(`billing-engine-rpc.internal`)"
+      - "traefik.tcp.services.billing-engine-rpc.loadbalancer.server.port=8888"
+      - "traefik.tcp.routers.billing-engine-rpc.entrypoints=internal"
     networks:
       - backend_net
       - db_net
       - redis_net
       - monitoring_net
+      - proxy_net
 
-  billing_engine.http:
+  billing-engine.http:
     build:
       context: .
       dockerfile: Dockerfile
-      # args:
-      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
-    container_name: billing_engine.http
     environment:
-      APP_NAME: billing_engine_http
+      APP_NAME: billing-engine-http
       APP_ENV: boe
       APP_TYPE: http
-    ports:
-      - "60002:8080"
+    # ports:
+    #   - "60002:8080"
     depends_on:
-      - billing_engine.postgres
-      - billing_engine.redis
+      - billing-engine.postgres
+      - billing-engine.redis
     labels:
       - "service=billing-engine-http"
+      - "traefik.enable=true"
+      - "traefik.http.routers.billing-engine-http.service=billing-engine-http"
+      - "traefik.http.routers.billing-engine-http.rule=Host(`billing-engine-http.localhost`)"
+      - "traefik.http.services.billing-engine-http.loadbalancer.server.port=8080"
+      - "traefik.http.routers.billing-engine-http.entrypoints=web"
     networks:
       - backend_net
       - db_net
       - redis_net
       - monitoring_net
-
-  billing_engine.http_2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # args:
-      #   GITHUB_TOKEN: ${GITHUB_TOKEN}
-    container_name: billing_engine.http_2
-    environment:
-      APP_NAME: billing_engine_http
-      APP_ENV: boe
-      APP_TYPE: http
-    ports:
-      - "60003:8080"
-    depends_on:
-      - billing_engine.postgres
-      - billing_engine.redis
-    labels:
-      - "service=billing-engine-http"
-    networks:
-      - backend_net
-      - db_net
-      - redis_net
-      - monitoring_net
+      - proxy_net
 
 volumes:
   billing_engine_postgres_pgdata:
@@ -113,4 +96,6 @@ networks:
   redis_net:
     external: true
   monitoring_net:
+    external: true
+  proxy_net:
     external: true

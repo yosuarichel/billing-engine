@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-RUN_NAME="billing_engine"
+RUN_NAME="billing-engine"
 
 mkdir -p output/bin output/conf output/conf/.idl
 cp script/* output/

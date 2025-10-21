@@ -1,4 +1,4 @@
-app_name: billing_engine
+app_name: billing-engine
 env: local
 rpc_port: 8888
 http_port: 8080
