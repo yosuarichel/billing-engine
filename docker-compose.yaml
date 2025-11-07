@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  billing-engine.postgres:
+  billing-engine-postgres:
     image: postgres:17
-    container_name: billing-engine.postgres
+    container_name: billing-engine-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -14,22 +14,20 @@ services:
     networks:
       - db_net
       - monitoring_net
-    ports:
-      - "5432:5432"
+      - discovery_net
 
-  billing-engine.redis:
+  billing-engine-redis:
     image: redis:7.4
-    container_name: billing-engine.redis
+    container_name: billing-engine-redis
     command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "6379:6379"
     volumes:
       - billing_engine_redis_data:/data
     networks:
       - redis_net
       - monitoring_net
+      - discovery_net
 
-  billing-engine.rpc:
+  billing-engine-rpc:
     build:
       context: .
       dockerfile: Dockerfile
@@ -37,27 +35,20 @@ services:
       APP_NAME: billing-engine-rpc
       APP_ENV: boe
       APP_TYPE: rpc
-    # ports:
-    #   - "60001:8888"
     depends_on:
-      - billing-engine.postgres
-      - billing-engine.redis
+      - billing-engine-postgres
+      - billing-engine-redis
     labels:
       - "service=billing-engine-rpc"
-      - "traefik.enable=true"
-      - "traefik.tcp.routers.billing-engine-rpc.service=billing-engine-rpc"
-      - "traefik.tcp.routers.billing-engine-rpc.tls=true"
-      - "traefik.tcp.routers.billing-engine-rpc.rule=HostSNI(`billing-engine-rpc.internal`)"
-      - "traefik.tcp.services.billing-engine-rpc.loadbalancer.server.port=8888"
-      - "traefik.tcp.routers.billing-engine-rpc.entrypoints=internal"
     networks:
       - backend_net
       - db_net
       - redis_net
       - monitoring_net
       - proxy_net
+      - discovery_net
 
-  billing-engine.http:
+  billing-engine-http:
     build:
       context: .
       dockerfile: Dockerfile
@@ -68,8 +59,8 @@ services:
     # ports:
     #   - "60002:8080"
     depends_on:
-      - billing-engine.postgres
-      - billing-engine.redis
+      - billing-engine-postgres
+      - billing-engine-redis
     labels:
       - "service=billing-engine-http"
       - "traefik.enable=true"
@@ -83,6 +74,7 @@ services:
       - redis_net
       - monitoring_net
       - proxy_net
+      - discovery_net
 
 volumes:
   billing_engine_postgres_pgdata:
@@ -98,4 +90,6 @@ networks:
   monitoring_net:
     external: true
   proxy_net:
+    external: true
+  discovery_net:
     external: true

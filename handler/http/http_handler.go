@@ -27,6 +27,12 @@ func NewHttpHandler(
 	}
 }
 
+func (h *HttpHandler) HealthCheck(c context.Context, ctx *app.RequestContext) {
+	klog.CtxInfof(c, "[HTTP Handler HealthCheck]")
+
+	ctx.String(http.StatusOK, "ok")
+}
+
 func (h *HttpHandler) CreateCustomer(c context.Context, ctx *app.RequestContext) {
 	klog.CtxInfof(c, "[HTTP Handler CreateCustomer]")
 

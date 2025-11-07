@@ -7,6 +7,7 @@ import (
 	"github.com/kitex-contrib/obs-opentelemetry/provider"
 	"github.com/yosuarichel/billing-engine/pkg/config"
 	"github.com/yosuarichel/billing-engine/pkg/infra/db"
+	"github.com/yosuarichel/billing-engine/pkg/infra/external"
 	"github.com/yosuarichel/billing-engine/pkg/infra/redis"
 	"github.com/yosuarichel/billing-engine/pkg/utils"
 )
@@ -35,6 +36,8 @@ func Init() *AppDeps {
 
 	// Init sonyflake
 	utils.InitSonyflakeCluster()
+
+	external.InitBillingCustomerClient()
 
 	return &AppDeps{
 		Cfg: cfg,

@@ -3,6 +3,7 @@ package utils
 import (
 	"hash/fnv"
 	"math"
+	"net"
 	"os"
 
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -69,4 +70,14 @@ func CalculateTotalAmount(principal int64, interestRate float64, termWeeks int) 
 	totalExact := float64(principal) + interestExact
 
 	return int64(math.Floor(totalExact))
+}
+
+func GetLocalIP() string {
+	addrs, _ := net.InterfaceAddrs()
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			return ipnet.IP.String()
+		}
+	}
+	return "127.0.0.1"
 }

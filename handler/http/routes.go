@@ -5,6 +5,8 @@ import (
 )
 
 func RegisterRoutes(h *server.Hertz, handler *HttpHandler) {
+	h.GET("/health", handler.HealthCheck)
+
 	h.POST("/api/v1/customer/create", handler.CreateCustomer)
 	h.POST("/api/v1/billing/is_delinquent", handler.IsDelinquent)
 	h.POST("/api/v1/billing/loan/create", handler.CreateLoan)

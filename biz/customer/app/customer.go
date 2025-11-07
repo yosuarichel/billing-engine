@@ -9,9 +9,10 @@ import (
 	"github.com/bytedance/gg/gconv"
 	"github.com/bytedance/gg/gptr"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/yosuarichel/billing-engine/biz/customer/domain"
 	"github.com/yosuarichel/billing-engine/kitex_gen/base"
 	"github.com/yosuarichel/billing-engine/kitex_gen/billing_engine"
+	"github.com/yosuarichel/billing-engine/pkg/infra/external"
+	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service"
 )
 
 func (a *CustomerApp) CreateCustomer(ctx context.Context, req *billing_engine.CreateCustomerRequest) (res *billing_engine.CreateCustomerResponse) {
@@ -24,9 +25,9 @@ func (a *CustomerApp) CreateCustomer(ctx context.Context, req *billing_engine.Cr
 		}
 	}
 
-	customerID, err := a.CustomerService.CreateCustomer(ctx, &domain.Customer{
+	customerID, err := external.CreateCustomer(ctx, &billing_customer_service.CreateCustomerRequest{
 		Name:        req.GetName(),
-		PhoneNumber: gptr.Of(req.GetPhoneNumber()),
+		PhoneNumber: req.GetPhoneNumber(),
 	})
 	if err != nil {
 		klog.CtxErrorf(ctx, "[Customer][App][CreateCustomer] Error call CreateCustomer service", map[string]interface{}{

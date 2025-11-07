@@ -20,4 +20,4 @@ if [ ! -d "$KITEX_LOG_DIR/rpc" ]; then
     mkdir -p "$KITEX_LOG_DIR/rpc"
 fi
 
-exec "$CURDIR/bin/billing_engine"
+exec "$CURDIR/bin/billing-engine"

@@ -16,7 +16,7 @@ build:
 .PHONY: up
 up:
 	@echo ">> Starting docker-compose"
-	docker-compose -f ./$(COMPOSE_FILE) up --scale billing-engine.http=3 --scale billing-engine.rpc=3 -d --build
+	docker-compose -f ./$(COMPOSE_FILE) up --scale billing-engine-http=3 --scale billing-engine-rpc=2 -d --build
 
 # Stop docker-compose
 .PHONY: down
@@ -43,5 +43,5 @@ clean: down
 .PHONY: kitexgen
 kitexgen:
 	@echo ">> Generating a new kitex gen"
-	rm -rf kitexgen
+	rm -rf kitex_gen
 	kitex -module github.com/yosuarichel/billing-engine ./conf/.idl/billing_engine/billing_engine_service.thrift

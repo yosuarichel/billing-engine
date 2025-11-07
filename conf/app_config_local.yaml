@@ -2,6 +2,11 @@ app_name: billing-engine
 env: local
 rpc_port: 8888
 http_port: 8080
+health_check_port: 5000
+
+consul:
+  host: consul
+  port: 8500
 
 db:
   driver: postgres
