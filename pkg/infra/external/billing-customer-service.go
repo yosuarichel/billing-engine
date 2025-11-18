@@ -6,9 +6,10 @@ import (
 	"sync"
 
 	"github.com/bytedance/gg/gconv"
+	"github.com/bytedance/gg/gslice"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
-	consul "github.com/kitex-contrib/registry-consul"
+	"github.com/yosuarichel/billing-engine/pkg/config"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service/billingcustomerservice"
 )
@@ -16,18 +17,20 @@ import (
 var (
 	customerClient billingcustomerservice.Client
 	once           sync.Once
+	cfg            = config.GetAppCfg()
 )
 
 func InitBillingCustomerClient() billingcustomerservice.Client {
 	once.Do(func() {
-		r, err := consul.NewConsulResolver("consul:8500")
-		if err != nil {
-			klog.Fatal(err)
+		host := gslice.Find(cfg.Upstreams, func(u config.UpstreamConfig) bool {
+			return u.Name == "billing-customer-rpc"
+		})
+		if !host.IsOK() {
+			klog.Fatal("billing-customer-rpc upstream not found")
 		}
-
 		c := billingcustomerservice.MustNewClient(
 			"billing-customer-rpc",
-			client.WithResolver(r),
+			client.WithHostPorts(fmt.Sprintf("%s:%d", host.Value().Host, host.Value().Port)),
 		)
 		customerClient = c
 	})

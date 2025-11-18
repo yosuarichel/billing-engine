@@ -4,6 +4,11 @@ rpc_port: 4009
 http_port: 4010
 health_check_port: 4000
 
+upstreams:
+  - name: billing-customer-rpc
+    host: billing-customer-rpc.app.svc.cluster.local
+    port: 4009
+
 consul:
   host: consul
   port: 8500

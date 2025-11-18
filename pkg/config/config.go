@@ -18,15 +18,16 @@ import (
 
 // AppConfig holds both config + secrets
 type AppConfig struct {
-	AppName         string       `json:"app_name" yaml:"app_name"`
-	Env             string       `json:"env" yaml:"env"`
-	DB              DBConfig     `json:"db" yaml:"db"`
-	Redis           RedisConfig  `json:"redis" yaml:"redis"`
-	HTTPPort        int          `json:"http_port" yaml:"http_port"`
-	RPCPort         int          `json:"rpc_port" yaml:"rpc_port"`
-	HealthCheckPort int          `json:"health_check_port" yaml:"health_check_port"`
-	NSQ             NSQConfig    `json:"nsq" yaml:"nsq"`
-	Consul          ConsulConfig `json:"consul" yaml:"consul"`
+	AppName         string           `json:"app_name" yaml:"app_name"`
+	Env             string           `json:"env" yaml:"env"`
+	DB              DBConfig         `json:"db" yaml:"db"`
+	Redis           RedisConfig      `json:"redis" yaml:"redis"`
+	HTTPPort        int              `json:"http_port" yaml:"http_port"`
+	RPCPort         int              `json:"rpc_port" yaml:"rpc_port"`
+	HealthCheckPort int              `json:"health_check_port" yaml:"health_check_port"`
+	NSQ             NSQConfig        `json:"nsq" yaml:"nsq"`
+	Consul          ConsulConfig     `json:"consul" yaml:"consul"`
+	Upstreams       []UpstreamConfig `json:"upstreams" yaml:"upstreams"`
 }
 
 type DBConfig struct {
@@ -60,6 +61,12 @@ type NSQConfig struct {
 }
 
 type ConsulConfig struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+}
+
+type UpstreamConfig struct {
+	Name string `yaml:"name"`
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 }
