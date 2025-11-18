@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bytedance/gg/gptr"
+	"github.com/bytedance/gg/gconv"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/yosuarichel/billing-engine/biz/billing/iface"
 	customerService "github.com/yosuarichel/billing-engine/biz/customer/service"
@@ -13,8 +13,10 @@ import (
 	loanScheduleService "github.com/yosuarichel/billing-engine/biz/loan_schedule/service"
 	loanScheduleRelationDomain "github.com/yosuarichel/billing-engine/biz/loan_schedule_relation/domain"
 	loanScheduleRelationService "github.com/yosuarichel/billing-engine/biz/loan_schedule_relation/service"
+	"github.com/yosuarichel/billing-engine/pkg/infra/external"
 	sharedDomain "github.com/yosuarichel/billing-engine/pkg/shared/domain"
 	"github.com/yosuarichel/billing-engine/pkg/utils"
+	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service"
 )
 
 type LoanService struct {
@@ -43,20 +45,25 @@ func (s *LoanService) CreateNewLoan(ctx context.Context, input *domain.Loan) (da
 		return nil, errors.New("missing parameters")
 	}
 
-	customerData, err := s.CustomerService.GetCustomerDetail(ctx, gptr.Of(input.CustomerID))
+	// customerData, err := s.CustomerService.GetCustomerDetail(ctx, gptr.Of(input.CustomerID))
+
+	customers, err := external.GetCustomers(ctx, &billing_customer_service.GetCustomerListRequest{
+		CustomerIds: []string{gconv.To[string](input.CustomerID)},
+	})
 	if err != nil {
-		klog.CtxErrorf(ctx, "[Billing][Service][CreateNewLoan] Error call GetCustomerDetail", map[string]interface{}{
+		klog.CtxErrorf(ctx, "[Billing][Service][CreateNewLoan] Error call GetCustomers", map[string]interface{}{
 			"error": err,
 			"input": input,
 		})
 		return
 	}
-	if customerData == nil {
+	if len(customers) == 0 {
 		return nil, errors.New("customer not found")
 	}
+	customerData := customers[0]
 
 	loanData, err := s.LoanService.GetLoanDetail(ctx, &domain.FindOneLoanParam{
-		CustomerID: customerData.ID,
+		CustomerID: gconv.To[int64](customerData.CustomerId),
 		Status:     domain.LoanStatus_Ongoing,
 	})
 	if err != nil {

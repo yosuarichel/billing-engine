@@ -12,6 +12,7 @@ import (
 	"github.com/yosuarichel/billing-engine/pkg/config"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service/billingcustomerservice"
+	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/data/customer_data"
 )
 
 var (
@@ -50,5 +51,22 @@ func CreateCustomer(ctx context.Context, req *billing_customer_service.CreateCus
 
 	customerID = gconv.To[int64](resp.GetCustomerId())
 
+	return
+}
+
+func GetCustomers(ctx context.Context, req *billing_customer_service.GetCustomerListRequest) (custumers []*customer_data.CustomerData, err error) {
+	resp, err := customerClient.GetCustomerList(ctx, req)
+	if err != nil || resp.GetBaseResp().GetStatusCode() != 200 {
+		klog.CtxErrorf(ctx, "[Customer][Repo][SaveCustomer] Error saving customer to db", map[string]interface{}{
+			"error": err,
+			"req":   fmt.Sprintf("%+v", req),
+		})
+		return nil, err
+	}
+	if resp.GetData() == nil {
+		return nil, nil
+	}
+
+	custumers = resp.GetData()
 	return
 }
