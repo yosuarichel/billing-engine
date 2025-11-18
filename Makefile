@@ -16,13 +16,13 @@ build:
 .PHONY: up
 up:
 	@echo ">> Starting docker-compose"
-	docker-compose -f ./$(COMPOSE_FILE) up --scale billing-engine-http=3 --scale billing-engine-rpc=2 -d --build
+	docker-compose -f ./deploy/$(COMPOSE_FILE) up --scale billing-engine-http=3 --scale billing-engine-rpc=2 -d --build
 
 # Stop docker-compose
 .PHONY: down
 down:
 	@echo ">> Stopping docker-compose"
-	docker-compose -f $(COMPOSE_FILE) down
+	docker-compose -f ./deploy/$(COMPOSE_FILE) down
 
 # Restart docker-compose
 .PHONY: restart
@@ -31,7 +31,7 @@ restart: down up
 # Show logs
 .PHONY: logs
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	docker-compose -f ./deploy/$(COMPOSE_FILE) logs -f
 
 # Clean up all containers & images
 .PHONY: clean

@@ -1,8 +1,8 @@
-version: "3.9"
+# version: "3.9"
 
 services:
   billing-engine-postgres:
-    image: postgres:17
+    image: postgres:18
     container_name: billing-engine-postgres
     restart: unless-stopped
     environment:
@@ -10,30 +10,30 @@ services:
       POSTGRES_PASSWORD: 123123
       POSTGRES_DB: billing_engine
     volumes:
-      - billing_engine_postgres_pgdata:/var/lib/postgresql/data
+      - billing_engine_pgdata:/var/lib/postgresql
     networks:
       - db_net
-      - monitoring_net
-      - discovery_net
+      # - monitoring_net
+      # - discovery_net
 
   billing-engine-redis:
-    image: redis:7.4
+    image: redis:8.2
     container_name: billing-engine-redis
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - billing_engine_redis_data:/data
     networks:
       - redis_net
-      - monitoring_net
-      - discovery_net
+      # - monitoring_net
+      # - discovery_net
 
   billing-engine-rpc:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: deploy/Dockerfile
     environment:
       APP_NAME: billing-engine-rpc
-      APP_ENV: boe
+      APP_ENV: dev
       APP_TYPE: rpc
     depends_on:
       - billing-engine-postgres
@@ -44,17 +44,17 @@ services:
       - backend_net
       - db_net
       - redis_net
-      - monitoring_net
-      - proxy_net
-      - discovery_net
+      # - monitoring_net
+      # - proxy_net
+      # - discovery_net
 
   billing-engine-http:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: deploy/Dockerfile
     environment:
       APP_NAME: billing-engine-http
-      APP_ENV: boe
+      APP_ENV: dev
       APP_TYPE: http
     # ports:
     #   - "60002:8080"
@@ -63,21 +63,21 @@ services:
       - billing-engine-redis
     labels:
       - "service=billing-engine-http"
-      - "traefik.enable=true"
-      - "traefik.http.routers.billing-engine-http.service=billing-engine-http"
-      - "traefik.http.routers.billing-engine-http.rule=Host(`billing-engine-http.localhost`)"
-      - "traefik.http.services.billing-engine-http.loadbalancer.server.port=8080"
-      - "traefik.http.routers.billing-engine-http.entrypoints=web"
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.billing-engine-http.service=billing-engine-http"
+      # - "traefik.http.routers.billing-engine-http.rule=Host(`billing-engine-http.localhost`)"
+      # - "traefik.http.services.billing-engine-http.loadbalancer.server.port=8080"
+      # - "traefik.http.routers.billing-engine-http.entrypoints=web"
     networks:
       - backend_net
       - db_net
       - redis_net
-      - monitoring_net
-      - proxy_net
-      - discovery_net
+      # - monitoring_net
+      # - proxy_net
+      # - discovery_net
 
 volumes:
-  billing_engine_postgres_pgdata:
+  billing_engine_pgdata:
   billing_engine_redis_data:
 
 networks:
@@ -87,9 +87,9 @@ networks:
     external: true
   redis_net:
     external: true
-  monitoring_net:
-    external: true
-  proxy_net:
-    external: true
-  discovery_net:
-    external: true
+  # monitoring_net:
+  #   external: true
+  # proxy_net:
+  #   external: true
+  # discovery_net:
+  #   external: true

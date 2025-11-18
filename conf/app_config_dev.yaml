@@ -1,8 +1,8 @@
 app_name: billing-engine
-env: local
-rpc_port: 8888
-http_port: 8080
-health_check_port: 5000
+env: dev
+rpc_port: 4009
+http_port: 4010
+health_check_port: 4000
 
 consul:
   host: consul
@@ -10,7 +10,7 @@ consul:
 
 db:
   driver: postgres
-  host: localhost
+  host: billing-engine-postgres
   port: 5432
   user: postgres
   password: 123123
@@ -21,7 +21,7 @@ db:
   max_conn_idle_time: 30
 
 redis:
-  host: localhost
+  host: billing-engine-redis
   port: 6379
   password: ""
   db: 0
