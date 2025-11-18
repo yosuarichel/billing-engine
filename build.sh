@@ -9,8 +9,10 @@ chmod +x output/bootstrap.sh
 
 if [ "$IS_SYSTEM_TEST_ENV" != "1" ]; then
     echo "generating build for non test env"
-    GOOS=linux GOARCH=arm64 go build -ldflags "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn" -o output/bin/${RUN_NAME}
+    CGO_ENABLED=0 GOOS=linux go build -v -buildvcs=false -ldflags "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn" -o output/bin/${RUN_NAME}
+    # go build -ldflags "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn" -o output/bin/${RUN_NAME}
 else
      echo "generating build for test env"
-    GOOS=linux GOARCH=arm64 go test -c -covermode=set -o output/bin/${RUN_NAME} -coverpkg=./...
+    CGO_ENABLED=0 GOOS=linux go test -c -covermode=set -o output/bin/${RUN_NAME} -coverpkg=./...
+    # go test -c -covermode=set -o output/bin/${RUN_NAME} -coverpkg=./...
 fi

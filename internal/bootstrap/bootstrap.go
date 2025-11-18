@@ -37,6 +37,7 @@ func Init() *AppDeps {
 	// Init sonyflake
 	utils.InitSonyflakeCluster()
 
+	// Init external clients
 	external.InitBillingCustomerClient()
 
 	return &AppDeps{

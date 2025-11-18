@@ -1,0 +1,440 @@
+import groovy.json.JsonSlurper
+
+// === GLOBAL FUNCTION ===
+// This function is needed again to call the GitHub API
+def callApi(String url, String method = 'GET', String data = null, String token = '') {
+    echo "🌐 Calling ${method} ${url}"
+    try {
+        def response = httpRequest(
+            url: url,
+            httpMode: method,
+            requestBody: data,
+            customHeaders: [
+                [name: 'Authorization', value: "token ${token}"],
+                [name: 'Accept', value: 'application/vnd.github+json']
+            ],
+            // Accept 404 (Not Found) or 422 (Unprocessable) as valid
+            // 422 occurs if a merge cannot be performed (e.g., conflict)
+            validResponseCodes: '200:299, 404, 422',
+            consoleLogResponseBody: true,
+            timeout: 20
+        )
+        
+        echo "HTTP ${response.status}"
+        return new JsonSlurper().parseText(response.content)
+
+    } catch (Exception e) {
+        error "❌ Failed to call API ${url}: ${e.message}"
+        return [:] // Return an empty map on error
+    }
+}
+def gitCommitShort
+def imageTag
+/*
+ * Jenkinsfile for PR-to-Deploy Pipeline
+ *
+ * Flow:
+ * 1. (Manual) Trigger with 'PR_NUMBER'.
+ * 2. Validate Input: Check if 'PR_NUMBER' exists.
+ * 3. Fetch PR Info: Check PR (open, mergeable, or already merged).
+ * 4. Validate Approval: Check (if not merged) if there is at least 1 approval.
+ * 5. Merge PR: Merge PR to 'main' (skip if already merged).
+ * 6. Checkout Main: Get the LATEST source code from 'main'.
+ * 7. Build Go App: Compile the Go application using 'build.sh'.
+ * 8. Build & Publish Image: Build Docker image and push to GHCR.
+ * 9. Deploy to Kubernetes: Update the image for BOTH RPC and HTTP deployments & check rollout status.
+ *
+ * Important Notes:
+ * 1. Dockerfile: A 'Dockerfile' must exist in the repo root.
+ * 2. Jenkins Credentials:
+ * - 'github-credential-id': Credential (Username & Password/Token) to checkout/clone the repo.
+ * - 'github-token': Credential (Secret Text) containing a GitHub Personal Access Token.
+ * This token MUST have the following scopes:
+ * - `repo`: (Full) For 'go get' private modules, checking PRs, and merging PRs.
+ * - `write:packages`: To push images to GHCR (GitHub Container Registry).
+ */
+pipeline {
+    // =======================================================
+    // AGENT: Multi-Container Kubernetes Pod
+    // =======================================================
+    agent {
+        kubernetes {
+            inheritFrom 'jenkins-ci-pod' // <-- This MUST match the *Name* of the Pod Template
+            defaultContainer 'jnlp'      // Still specify the default container to start in
+        }
+    }
+
+    // =======================================================
+    // PARAMETERS
+    // =======================================================
+    parameters {
+        string(name: 'PR_NUMBER', description: 'GitHub Pull Request number to merge and deploy', defaultValue: '')
+    }
+
+    // =======================================================
+    // GLOBAL OPTIONS
+    // =======================================================
+    options {
+        skipStagesAfterUnstable()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    // =======================================================
+    // ENVIRONMENT VARIABLES
+    // =======================================================
+    environment {
+        // === Go repo configuration ===
+        GITHUB_USER = 'yosuarichel' // Change this if the GitHub username/org is different
+        GITHUB_REPO = 'yosuarichel/billing-engine'
+        GOPRIVATE_MODULES = "github.com/${GITHUB_USER}/*" // For 'go get' private modules
+
+        // === Image & Deploy Configuration ===
+        IMAGE_NAME = "ghcr.io/${GITHUB_USER}/billing-engine" // Image name in GHCR
+        
+        // === K8s Deployment Names ===
+        APP_NAME_RPC = 'billing-engine-rpc'   // K8s deployment name for RPC server
+        APP_NAME_HTTP = 'billing-engine-http' // K8s deployment name for HTTP server
+        APP_NAMESPACE = 'app'                   // Target K8s namespace
+
+        // These variables will be populated at runtime
+        IS_MERGED = 'false' // PR status (boolean as a string)
+    }
+
+    stages {
+        // =======================================================
+        stage('(1/9) Validate Input') {
+            steps {
+                script {
+                    if (!params.PR_NUMBER?.trim()) {
+                        error "❌ PR_NUMBER parameter is required."
+                    }
+                    echo "✅ Validating PR: ${params.PR_NUMBER}"
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(2/9) Fetch PR Info & Check Status') {
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        echo "🔍 Fetching PR #${params.PR_NUMBER} info..."
+                        def pr = callApi(
+                            "https://api.github.com/repos/${env.GITHUB_REPO}/pulls/${params.PR_NUMBER}",
+                            "GET", null, GITHUB_TOKEN
+                        )
+
+                        if (!pr || pr.message) {
+                            error "❌ Failed to fetch PR: ${pr.message ?: 'Invalid response'}"
+                        }
+
+                        // Check PR status
+                        if (pr.state != 'open') {
+                            if (pr.merged == true) {
+                                echo "ℹ️ PR #${params.PR_NUMBER} status: ${pr.state} (merged)."
+                                env.IS_MERGED = 'true' // Mark as merged
+                            } else {
+                                error "❌ PR #${params.PR_NUMBER} status: ${pr.state}. Only 'open' or 'merged' PRs can be processed."
+                            }
+                        } else {
+                            // PR status 'open'
+                            echo "ℹ️ PR #${params.PR_NUMBER} status: open."
+                            if (pr.mergeable == false) {
+                                error "❌ PR is not 'mergeable'. There might be conflicts. Please check on GitHub."
+                            }
+                            echo "✅ PR is 'mergeable'."
+                        }
+                    }
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(3/9) Validate PR Approvals') {
+            // This stage is skipped if the PR is already merged
+            when { expression { env.IS_MERGED == 'false' } }
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        echo "🔍 Fetching PR approvals..."
+                        def reviews = callApi(
+                            "https://api.github.com/repos/${env.GITHUB_REPO}/pulls/${params.PR_NUMBER}/reviews",
+                            "GET", null, GITHUB_TOKEN
+                        )
+
+                        if (reviews == null) {
+                             error "❌ Failed to fetch PR reviews."
+                        }
+
+                        // Find reviews with state 'APPROVED'
+                        def approvedReviews = reviews.findAll { it.state == 'APPROVED' }
+                        
+                        echo "ℹ️ Found ${approvedReviews.size()} approval(s)."
+
+                        // if (approvedReviews.size() < 1) {
+                        //     error "❌ PR #${params.PR_NUMBER} is not approved. Requires at least 1 approval to merge."
+                        // }
+                        
+                        echo "✅ PR is approved."
+                    }
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(4/9) Merge PR') {
+            steps {
+                script {
+                    if (env.IS_MERGED == 'true') {
+                        echo "⏩ Skipping merge, PR #${params.PR_NUMBER} is already merged."
+                    } else {
+                        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                            echo "🔁 Merging PR #${params.PR_NUMBER}..."
+                            def mergeResponse = callApi(
+                                "https://api.github.com/repos/${env.GITHUB_REPO}/pulls/${params.PR_NUMBER}/merge",
+                                "PUT",
+                                '{"commit_title":"Auto merge by Jenkins CI/CD","merge_method":"squash"}',
+                                GITHUB_TOKEN
+                            )
+
+                            if (!mergeResponse.merged) {
+                                error "❌ Merge failed: ${mergeResponse.message ?: 'Merge failed, check GitHub.'}"
+                            }
+                            echo "✅ PR merged successfully (SHA: ${mergeResponse.sha})"
+                        }
+                    }
+                }
+            }
+        }
+        
+        // =======================================================
+        stage('(5/9) Checkout Main') {
+            steps {
+                script {
+                    echo "🧹 Cleaning up workspace..."
+                    cleanWs()
+
+                    echo "📥 Checking out 'main' branch from ${env.GITHUB_REPO}..."
+                    // Capture the return value of the checkout step
+                    def scmVars = checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        extensions: [
+                            [$class: 'CleanBeforeCheckout'],
+                            [$class: 'CloneOption', depth: 1, shallow: true]
+                        ],
+                        userRemoteConfigs: [[
+                            url: "https://github.com/${env.GITHUB_REPO}.git",
+                            credentialsId: 'github-credential-id' // Ensure this credential exists
+                        ]]
+                    ])
+
+                    // Check if the checkout step returned the expected info
+                    if (scmVars == null || !scmVars.GIT_COMMIT) {
+                        error "❌ Checkout step failed to return Git commit information."
+                    }
+                    
+                    echo "Full GIT_COMMIT from checkout step: ${scmVars.GIT_COMMIT}"
+
+                    // Get the short hash from the full commit (e.g., first 7 chars)
+                    def localCommitShort = scmVars.GIT_COMMIT.substring(0, 7)
+                    
+                    if (localCommitShort == null || localCommitShort.isEmpty()) {
+                        error "❌ Failed to extract short commit hash from ${scmVars.GIT_COMMIT}"
+                    }
+
+                    echo "✅ Checkout 'main' successful. Latest commit: ${localCommitShort}"
+                    
+                    // Set the global variables
+                    gitCommitShort = localCommitShort
+                    imageTag = gitCommitShort
+                    
+                    echo "Image tag set to: ${imageTag}"
+                    
+                    // Stash all source code for use in other stages
+                    echo "📦 Stashing source code..."
+                    stash name: 'source', includes: '**'
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(6/9) Build Go App') {
+            steps {
+                container('golang') {
+                    script {
+                        echo "📦 Unstashing source code..."
+                        unstash 'source'
+
+                        // Configure Git & Go for private modules
+                        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                            sh """
+                                echo "🔑 Configuring Git for private module access..."
+                                git config --global url."https://oauth2:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+                                
+                                echo "🔒 Configuring Go environment..."
+                                go env -w GOPRIVATE=${env.GOPRIVATE_MODULES}
+                                go env -w GONOSUMDB=${env.GOPRIVATE_MODULES}
+                                go env -w GONOPROXY=${env.GOPRIVATE_MODULES}
+                                
+                                echo "✅ Git and Go env configured for private access"
+                            """
+
+                            // Run the build script
+                            sh """
+                                set -euo pipefail
+                                echo "⚙️ Running build.sh..."
+                                [ -f build.sh ] || { echo "❌ build.sh not found"; exit 1; }
+                                chmod +x build.sh
+                                ./build.sh
+                                [ -d output/bin ] || { echo "❌ Build failed: 'output/bin' directory not found"; exit 1; }
+                                echo "✅ Build successful. Binary:"
+                                ls -lah output/bin/
+                            """
+                        }
+                        
+                        // Stash build results (binary) and Dockerfile
+                        echo "🗃️ Stashing build artifacts & Dockerfile..."
+                        stash name: 'build-artifacts', includes: 'output/**'
+                        stash name: 'dockerfile', includes: 'deploy/Dockerfile'
+                    }
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(7/9) Build & Publish Image') {
+            steps {
+                container('docker') {
+                    script {
+                        echo "📦 Unstashing build artifacts & Dockerfile..."
+                        sh "rm -rf *"
+                        unstash 'build-artifacts'
+                        unstash 'dockerfile'
+
+                        // sh "ls -lah "
+                        // sh "ls -lah output"
+                        // sh "ls -lah output/bin"
+                        
+                        // Login to GHCR
+                        echo "🔑 Logging into GHCR..."
+                        withCredentials([string(credentialsId: 'github-token', variable: 'GHCR_TOKEN')]) {
+                            sh "echo ${GHCR_TOKEN} | docker login ghcr.io -u ${env.GITHUB_USER} --password-stdin"
+                        }
+                        
+                        // Build image
+                        echo "🐳 Building image: ${env.IMAGE_NAME}:${imageTag}"
+                        sh "docker build -t ${env.IMAGE_NAME}:${imageTag} -f deploy/Dockerfile ."
+                        echo "✅ Image built successfully"
+                        
+                        // Tag also as 'latest'
+                        echo "🏷️ Tagging image: ${env.IMAGE_NAME}:${imageTag}"
+                        sh "docker tag ${env.IMAGE_NAME}:${imageTag} ${env.IMAGE_NAME}:latest"
+                        echo "✅ Image tagged as latest"
+                        
+                        // Pushing image to GHCR
+                        echo "🚀 Pushing image: ${env.IMAGE_NAME}:${imageTag}"
+                        sh "docker push ${env.IMAGE_NAME}:${imageTag}"
+                        echo "✅ Image pushed successfully"
+                        
+                        // Pushing image to GHCR as 'latest'
+                        echo "🚀 Pushing image: ${env.IMAGE_NAME}:latest"
+                        sh "docker push ${env.IMAGE_NAME}:latest"
+                        echo "✅ Image pushed successfully"
+                        
+                        echo "✅ Image ${env.IMAGE_NAME}:${imageTag} published successfully to GHCR!"
+                    }
+                }
+            }
+        }
+
+        // =======================================================
+        stage('(8/9) Deploy to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    script {
+                        // sh "ls -lah "
+                        // sh "ls -lah output"
+                        // sh "ls -lah output/bin"
+                        
+                        echo "🚀 Deploying image ${env.IMAGE_NAME}:${imageTag} to namespace ${env.APP_NAMESPACE}..."
+                        
+                        def fullImageName = "${env.IMAGE_NAME}:${imageTag}"
+                        
+                        // --- Deploy RPC Server ---
+                        echo "Updating RPC Deployment: ${env.APP_NAME_RPC}"
+                        sh """
+                            set -x
+                            kubectl set image deployment/${env.APP_NAME_RPC} \
+                                ${env.APP_NAME_RPC}=${fullImageName} \
+                                --namespace ${env.APP_NAMESPACE} \
+                        """
+                        
+                        // --- Deploy HTTP Server ---
+                        echo "Updating HTTP Deployment: ${env.APP_NAME_HTTP}"
+                        sh """
+                            set -x
+                            kubectl set image deployment/${env.APP_NAME_HTTP} \
+                                ${env.APP_NAME_HTTP}=${fullImageName} \
+                                --namespace ${env.APP_NAMESPACE} \
+                        """
+                        
+                        echo "✅ 'set image' commands executed for both RPC and HTTP deployments."
+                    }
+                }
+            }
+        }
+        
+        // =======================================================
+        stage('(9/9) Verify Deployment') {
+            steps {
+                container('kubectl') {
+                    script {
+                        // --- Verify RPC Server ---
+                        echo "🔎 Waiting for RPC deployment (${env.APP_NAME_RPC}) rollout to complete..."
+                        sh "ls -lah ."
+                        timeout(time: 2, unit: 'MINUTES') {
+                            sh "kubectl rollout status deployment/${env.APP_NAME_RPC} --namespace ${env.APP_NAMESPACE}"
+                        }
+                        echo "✅ Deployment ${env.APP_NAME_RPC} successfully updated!"
+
+                        // --- Verify HTTP Server ---
+                        echo "🔎 Waiting for HTTP deployment (${env.APP_NAME_HTTP}) rollout to complete..."
+                        timeout(time: 10, unit: 'MINUTES') {
+                            sh "kubectl rollout status deployment/${env.APP_NAME_HTTP} --namespace ${env.APP_NAMESPACE}"
+                        }
+                        echo "✅ Deployment ${env.APP_NAME_HTTP} successfully updated!"
+                    }
+                }
+            }
+        }
+    }
+
+    // =======================================================
+    // POST ACTIONS
+    // =======================================================
+    post {
+        always {
+            echo "🧹 Final cleanup..."
+                cleanWs()
+                
+                // Logout from GHCR (best practice)
+                container('docker') {
+                    echo "🔑 Logging out from GHCR..."
+                    sh "docker logout ghcr.io || true"
+                }
+        }
+        success {
+            echo "✅ (PR #${params.PR_NUMBER}) Deploy Pipeline Finished Successfully!"
+        }
+        failure {
+            echo "❌ (PR #${params.PR_NUMBER}) Deploy Pipeline Failed!"
+        }
+        aborted {
+            echo "🛑 (PR #${params.PR_NUMBER}) Deploy Pipeline Aborted."
+        }
+    }
+}

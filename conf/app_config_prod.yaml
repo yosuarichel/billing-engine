@@ -1,8 +1,8 @@
 app_name: billing-engine
-env: prod
-rpc_port: 8888
-http_port: 8080
-health_check_port: 5000
+env: boe
+rpc_port: 4009
+http_port: 4010
+health_check_port: 4000
 
 consul:
   host: consul
@@ -10,18 +10,18 @@ consul:
 
 db:
   driver: postgres
-  host: billing-engine-postgres
+  host: billing-engine-postgres.infra.svc.cluster.local
   port: 5432
   user: postgres
   password: 123123
-  db_name: billing_engine
+  db_name: billing-engine
   max_open_conns: 100
   max_idle_conns: 50
   max_conn_lifetime: 120
   max_conn_idle_time: 30
 
 redis:
-  host: billing-engine-redis
+  host: billing-engine-redis.infra.svc.cluster.local
   port: 6379
   password: ""
   db: 0
