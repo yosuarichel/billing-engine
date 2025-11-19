@@ -9,8 +9,6 @@ import (
 	"github.com/bytedance/gg/gslice"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/cloudwego/kitex/pkg/loadbalance"
-	dns "github.com/kitex-contrib/resolver-dns"
 	"github.com/yosuarichel/billing-engine/pkg/config"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service"
 	"github.com/yosuarichel/idl_gen_billing_customer_service/kitex_gen/billing/billing_customer/billing_customer_service/billingcustomerservice"
@@ -33,10 +31,8 @@ func InitBillingCustomerClient() billingcustomerservice.Client {
 		}
 		c := billingcustomerservice.MustNewClient(
 			"billing-customer-rpc",
-			// client.WithHostPorts(fmt.Sprintf("%s:%d", host.Value().Host, host.Value().Port)),
+			client.WithHostPorts(fmt.Sprintf("%s:%d", host.Value().Host, host.Value().Port)),
 			client.WithMuxConnection(2),
-			client.WithResolver(dns.NewDNSResolver()),
-			client.WithLoadBalancer(loadbalance.NewWeightedRoundRobinBalancer()),
 		)
 		customerClient = c
 	})
