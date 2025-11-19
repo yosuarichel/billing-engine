@@ -50,6 +50,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/kitex-contrib/resolver-dns v0.1.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
