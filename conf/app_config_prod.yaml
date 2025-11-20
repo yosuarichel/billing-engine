@@ -30,3 +30,7 @@ redis:
   port: 6379
   password: ""
   db: 0
+
+otel_collector:
+  host: otel-collector.monitoring.svc.cluster.local
+  port: 4317
