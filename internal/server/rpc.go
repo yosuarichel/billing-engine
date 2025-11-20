@@ -25,7 +25,7 @@ func StartRPC(ctx context.Context, cfg *config.AppConfig, handler *rpcHandler.Rp
 	// Init OpenTelemetry provider
 	p := provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(appName),
-		provider.WithExportEndpoint("otel-collector:4317"),
+		provider.WithExportEndpoint(fmt.Sprintf("%s:%d", cfg.OtelCollector.Host, cfg.OtelCollector.Port)),
 		provider.WithInsecure(),
 		provider.WithResourceAttribute(attribute.String("env", cfg.Env)),
 	)
